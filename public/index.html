@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Servicios Escolares</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .card {
+      border-radius: 1rem;
+    }
+
+    .table thead th {
+      vertical-align: middle;
+    }
+
+    .form-label i {
+      color: #0d6efd;
+    }
+
+    .btn-primary, .btn-success {
+      border-radius: 0.5rem;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container py-5">
+    <h1 class="text-center text-primary fw-bold mb-5 display-4">Servicios Escolares</h1>
+
+    <div class="card shadow mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+        <span class="fw-semibold text-dark"><i class="bi bi-people-fill me-2"></i>Listado de Alumnos</span>
+        <button type="button" class="btn btn-success btn-sm" onclick="makeModal('Agregar Alumno', 'Guardar', 'agregarRegistro')">
+          <i class="bi bi-plus-circle me-1"></i>Agregar
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="table-primary">
+              <tr>
+                <th>Num. Control</th>
+                <th>Nombre</th>
+                <th>Primer Ap.</th>
+                <th>Segundo Ap.</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="dataArea"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalArea"></div>
+
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    let alumnoModalElement;
+
+    function makeModal(title, button_value, callback) {
+      let html = `
+      <div class="modal fade" id="alumnoModal">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content border-0 shadow-lg">
+            <form id="alumnoform" class="bg-light rounded-4 p-4">
+              <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-primary"><i class="bi bi-person-lines-fill me-2"></i>${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body pt-0">
+                <div class="row g-3">
+
+                  <div class="col-md-6">
+                    <label for="numControl" class="form-label"><i class="bi bi-hash me-1"></i>Número de Control</label>
+                    <input type="text" class="form-control border-primary" id="numControl" name="numControl" required />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="nombre" class="form-label"><i class="bi bi-person-fill me-1"></i>Nombre</label>
+                    <input type="text" class="form-control border-primary" id="nombre" name="nombre" required />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="primerAp" class="form-label"><i class="bi bi-person-badge me-1"></i>Primer Apellido</label>
+                    <input type="text" class="form-control border-primary" id="primerAp" name="primerAp" required />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="segundoAp" class="form-label"><i class="bi bi-person-badge-fill me-1"></i>Segundo Apellido</label>
+                    <input type="text" class="form-control border-primary" id="segundoAp" name="segundoAp" />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="fechaNac" class="form-label"><i class="bi bi-calendar-date me-1"></i>Fecha de Nacimiento</label>
+                    <input type="date" class="form-control border-primary" id="fechaNac" name="fechaNac" />
+                  </div>
+
+                  <div class="col-md-3">
+                    <label for="semestre" class="form-label"><i class="bi bi-list-ol me-1"></i>Semestre</label>
+                    <input type="number" class="form-control border-primary" id="semestre" name="semestre" />
+                  </div>
+
+                  <div class="col-md-9">
+                    <label for="carrera" class="form-label"><i class="bi bi-mortarboard-fill me-1"></i>Carrera</label>
+                    <input type="text" class="form-control border-primary" id="carrera" name="carrera" />
+                  </div>
+
+                </div>
+              </div>
+              <div class="modal-footer border-0">
+                <input type="hidden" id="alumno_id" name="alumno_id" />
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="${callback}()">${button_value}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>`;
+
+      document.getElementById('modalArea').innerHTML = html;
+      alumnoModalElement = new bootstrap.Modal(document.getElementById('alumnoModal'));
+      alumnoModalElement.show();
+    }
+
+    function mostrarRegistros() {
+      fetch('/alumnos')
+        .then(res => res.json())
+        .then(data => {
+          let html = '';
+          data.forEach(row => {
+            html += `
+              <tr>
+                <td>${row.numControl}</td>
+                <td>${row.nombre}</td>
+                <td>${row.primerAp}</td>
+                <td>${row.segundoAp}</td>
+                <td>
+                  <button class="btn btn-info btn-sm me-1" onclick="verDetalle('${row._id}')"><i class="bi bi-eye"></i></button>
+                  <button class="btn btn-warning btn-sm me-1" onclick="detalle('${row._id}')"><i class="bi bi-pencil-square"></i></button>
+                  <button class="btn btn-danger btn-sm" onclick="eliminar('${row._id}')"><i class="bi bi-trash"></i></button>
+                </td>
+              </tr>`;
+          });
+          document.getElementById('dataArea').innerHTML = html || '<tr><td colspan="5">No hay registros.</td></tr>';
+        });
+    }
+
+    function agregarRegistro() {
+      const formData = new FormData(document.getElementById('alumnoform'));
+      const jsonData = Object.fromEntries(formData.entries());
+
+      fetch('/alumnos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jsonData)
+      })
+        .then(res => res.json())
+        .then(() => {
+          alumnoModalElement.hide();
+          mostrarRegistros();
+          Swal.fire('Agregado', 'El alumno ha sido registrado.', 'success');
+        });
+    }
+
+    function detalle(id) {
+      fetch(`/alumnos/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          makeModal('Editar Alumno', 'Guardar Cambios', 'modificar');
+          for (let key in data) {
+            if (document.getElementById(key)) {
+              document.getElementById(key).value = data[key];
+            }
+          }
+          document.getElementById('alumno_id').value = data._id;
+        });
+    }
+
+    function modificar() {
+      const formData = new FormData(document.getElementById('alumnoform'));
+      const jsonData = Object.fromEntries(formData.entries());
+      const alumnoId = jsonData.alumno_id;
+
+      fetch(`/alumnos/${alumnoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jsonData)
+      })
+        .then(res => res.json())
+        .then(() => {
+          alumnoModalElement.hide();
+          mostrarRegistros();
+          Swal.fire('Actualizado', 'Los datos han sido modificados.', 'success');
+        });
+    }
+
+    function eliminar(id) {
+      Swal.fire({
+        title: '¿Eliminar alumno?',
+        text: 'No podrás revertir esta acción.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        cancelButtonText:"Cancelar",
+        confirmButtonText: 'Sí, eliminar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/alumnos/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(() => {
+              mostrarRegistros();
+              Swal.fire('Eliminado', 'El registro ha sido borrado.', 'success');
+            });
+        }
+      });
+    }
+
+    function verDetalle(id) {
+      fetch(`/alumnos/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          const modalHTML = `
+          <div class="modal fade" id="detalleModal">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Detalle del Alumno</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <p><strong>Num. Control:</strong> ${data.numControl}</p>
+                  <p><strong>Nombre:</strong> ${data.nombre}</p>
+                  <p><strong>Primer Apellido:</strong> ${data.primerAp}</p>
+                  <p><strong>Segundo Apellido:</strong> ${data.segundoAp}</p>
+                  <p><strong>Fecha de Nacimiento:</strong> ${data.fechaNac}</p>
+                  <p><strong>Semestre:</strong> ${data.semestre}</p>
+                  <p><strong>Carrera:</strong> ${data.carrera}</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+          document.getElementById('modalArea').innerHTML = modalHTML;
+          new bootstrap.Modal(document.getElementById('detalleModal')).show();
+        });
+    }
+
+    mostrarRegistros();
+  </script>
+</body>
+</html>
